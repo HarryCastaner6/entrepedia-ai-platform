@@ -1,0 +1,32 @@
+# Core Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Web Scraping
+requests==2.31.0
+beautifulsoup4==4.12.2
+
+# Document Processing - Basic
+PyPDF2==3.0.1
+pdfminer.six==20221105
+python-docx==1.1.0
+Pillow
+
+# AI & Embeddings - Core
+anthropic
+openai
+
+# Database
+sqlalchemy==2.0.23
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Utilities
+python-dotenv==1.0.0
+tqdm==4.66.1
+aiofiles==23.2.1

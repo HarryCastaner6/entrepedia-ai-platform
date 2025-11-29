@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+
+# Data
+data/
+logs/
+*.db
+*.sqlite
+
+# Node
+node_modules/
+.vercel/
+dist/
+build/
+
+# Credentials
+credentials/
+*.pem
+*.key
+
+# Temp files
+*.log
+*.tmp
+.cache/
