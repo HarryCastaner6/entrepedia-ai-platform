@@ -250,7 +250,7 @@ export function Dashboard() {
                     }`}></div>
                     <span className="font-semibold text-slate-700">{type.toUpperCase()}</span>
                   </div>
-                  <span className="text-lg font-bold text-gradient-purple">{count}</span>
+                  <span className="text-lg font-bold text-gradient-purple">{count as number}</span>
                 </div>
               ))
             ) : (

@@ -20,7 +20,7 @@ export function ProtectedRoute({ children, redirectTo = '/login' }: ProtectedRou
         setLoading(true);
         try {
           // Try to get user info to verify token is still valid
-          await authApi.getUserInfo();
+          await authApi.getProfile();
           // Token is valid, user should be logged in already via store
         } catch (error) {
           // Token is invalid, log out
