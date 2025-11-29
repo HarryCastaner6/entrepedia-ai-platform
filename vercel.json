@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "frontend/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "postgresql://postgres:Glory2GodAlways2023!@db.apmwojsfejoiugiohipm.supabase.co:5432/postgres",
+    "SUPABASE_URL": "https://apmwojsfejoiugiohipm.supabase.co",
+    "SUPABASE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwbXdvanNmZWpvaXVnaW9oaXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0Mzc2MDEsImV4cCI6MjA4MDAxMzYwMX0.aJdRDnyKgLNyyvAxPBH-HRDA6yL1zk7p5EFaF4ju5AM",
+    "STORAGE_TYPE": "supabase",
+    "VECTOR_DB_TYPE": "supabase",
+    "APP_ENV": "production",
+    "DEBUG": "False",
+    "GEMINI_API_KEY": "AIzaSyCpJ7QG7rSsWKPalelbHKZ-hLZK8pMPNQ8"
+  },
+  "outputDirectory": "frontend/dist"
+}
