@@ -1,0 +1,15 @@
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile
+    deploy:
+      restartPolicyType: always
+    env:
+      PYTHON_VERSION: 3.11.0
+      DATABASE_URL: postgresql://postgres:Glory2GodAlways2023!@db.apmwojsfejoiugiohipm.supabase.co:5432/postgres
+      SUPABASE_URL: https://apmwojsfejoiugiohipm.supabase.co
+      SUPABASE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwbXdvanNmZWpvaXVnaW9oaXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0Mzc2MDEsImV4cCI6MjA4MDAxMzYwMX0.aJdRDnyKgLNyyvAxPBH-HRDA6yL1zk7p5EFaF4ju5AM
+      STORAGE_TYPE: supabase
+      VECTOR_DB_TYPE: supabase
+      APP_ENV: production
+      DEBUG: "False"
