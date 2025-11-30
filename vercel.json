@@ -31,6 +31,6 @@
     "VECTOR_DB_TYPE": "supabase",
     "APP_ENV": "production",
     "DEBUG": "False",
-    "GEMINI_API_KEY": "AIzaSyCpJ7QG7rSsWKPalelbHKZ-hLZK8pMPNQ8"
+    "GEMINI_API_KEY": "AIzaSyB7_gjyyVbSZPLzcrC5vQg0ZGxcLOGpMM8"
   }
 }

@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # AI APIs
     anthropic_api_key: str = "placeholder_anthropic_key"
     openai_api_key: str = "placeholder_openai_key"
-    gemini_api_key: str = "AIzaSyCpJ7QG7rSsWKPalelbHKZ-hLZK8pMPNQ8"
+    gemini_api_key: str = "AIzaSyB7_gjyyVbSZPLzcrC5vQg0ZGxcLOGpMM8"
 
     # Vector Database
     vector_db_type: Literal["faiss", "pinecone", "weaviate", "supabase"] = "faiss"
