@@ -246,8 +246,6 @@ async def change_password(
             "message": "Password updated successfully"
         }
 
-    except HTTPException:
-        raise
     except Exception as e:
         db.rollback()
         app_logger.error(f"Password change failed: {e}")
@@ -255,3 +253,46 @@ async def change_password(
             status_code=500,
             detail="Password change failed"
         )
+
+
+@router.post("/setup-admin")
+async def setup_admin_user(db: Session = Depends(get_db_dependency)) -> Dict[str, Any]:
+    """
+    Temporary endpoint to create/reset admin user.
+    """
+    try:
+        username = "testuser"
+        email = "test@example.com"
+        password = "test123"
+        
+        user = db.query(User).filter(User.username == username).first()
+        
+        if user:
+            # Update existing user
+            user.hashed_password = hash_password(password)
+            user.is_active = True
+            action = "updated"
+        else:
+            # Create new user
+            user = User(
+                username=username,
+                email=email,
+                full_name="Test Admin",
+                hashed_password=hash_password(password),
+                is_active=True
+            )
+            db.add(user)
+            action = "created"
+        
+        db.commit()
+        return {
+            "success": True,
+            "message": f"Admin user {action} successfully",
+            "credentials": {
+                "username": username,
+                "password": password
+            }
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
