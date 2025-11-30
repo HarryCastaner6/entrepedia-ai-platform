@@ -255,7 +255,7 @@ async def change_password(
         )
 
 
-@router.post("/setup-admin")
+@router.get("/setup-admin")
 async def setup_admin_user(db: Session = Depends(get_db_dependency)) -> Dict[str, Any]:
     """
     Temporary endpoint to create/reset admin user.
