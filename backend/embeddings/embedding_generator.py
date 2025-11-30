@@ -21,11 +21,10 @@ except ImportError:
     ANTHROPIC_AVAILABLE = False
 
 try:
-    from sentence_transformers import SentenceTransformer
-    SENTENCE_TRANSFORMERS_AVAILABLE = True
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
 except ImportError:
-    SENTENCE_TRANSFORMERS_AVAILABLE = False
-
+    GEMINI_AVAILABLE = False
 
 class EmbeddingGenerator:
     """Generate embeddings using multiple AI providers."""
@@ -35,7 +34,10 @@ class EmbeddingGenerator:
         self.logger = app_logger
         self.openai_client = None
         self.anthropic_client = None
-        self.sentence_transformer = None
+        
+        # Initialize Gemini
+        if GEMINI_AVAILABLE and settings.gemini_api_key:
+            genai.configure(api_key=settings.gemini_api_key)
 
         # Initialize clients based on available API keys and modules
         if OPENAI_AVAILABLE and settings.openai_api_key:
@@ -47,7 +49,7 @@ class EmbeddingGenerator:
     def generate_embeddings(
         self,
         texts: List[str],
-        model: str = "sentence-transformer",
+        model: str = "gemini",
         chunk_size: int = 512
     ) -> List[Dict[str, Any]]:
         """
@@ -55,7 +57,7 @@ class EmbeddingGenerator:
 
         Args:
             texts: List of text strings to embed
-            model: Model to use ('openai', 'sentence-transformer')
+            model: Model to use ('gemini', 'openai')
             chunk_size: Maximum characters per chunk
 
         Returns:
@@ -81,13 +83,17 @@ class EmbeddingGenerator:
         
         # Generate embeddings for uncached texts
         generated = []
-        if model == "openai" and self.openai_client:
+        if model == "gemini" and GEMINI_AVAILABLE:
+            generated = self._generate_gemini_embeddings(texts_to_generate)
+        elif model == "openai" and self.openai_client:
             generated = self._generate_openai_embeddings(texts_to_generate)
-        elif model == "sentence-transformer":
-            generated = self._generate_sentence_transformer_embeddings(texts_to_generate)
         else:
-            self.logger.error(f"Model {model} not available or not configured")
-            return []
+            # Fallback to Gemini if available, otherwise error
+            if GEMINI_AVAILABLE:
+                generated = self._generate_gemini_embeddings(texts_to_generate)
+            else:
+                self.logger.error(f"Model {model} not available or not configured")
+                return []
         
         # Store generated embeddings in cache
         for emb in generated:
@@ -97,6 +103,36 @@ class EmbeddingGenerator:
         embeddings = cached_embeddings + generated
 
         self.logger.info(f"Generated {len(embeddings)} embeddings")
+        return embeddings
+
+    def _generate_gemini_embeddings(self, texts: List[str]) -> List[Dict[str, Any]]:
+        """Generate embeddings using Google Gemini."""
+        embeddings = []
+        try:
+            # Process in batches
+            batch_size = 20
+            for i in range(0, len(texts), batch_size):
+                batch = texts[i:i + batch_size]
+                
+                # Gemini embedding call
+                result = genai.embed_content(
+                    model="models/embedding-001",
+                    content=batch,
+                    task_type="retrieval_document",
+                    title="Embedding of list of strings"
+                )
+                
+                for j, vector in enumerate(result['embedding']):
+                    embeddings.append({
+                        'text': batch[j],
+                        'vector': vector,
+                        'model': 'models/embedding-001',
+                        'dimensions': len(vector)
+                    })
+                    
+        except Exception as e:
+            self.logger.error(f"Gemini embedding generation failed: {e}")
+            
         return embeddings
 
     def _generate_openai_embeddings(self, texts: List[str]) -> List[Dict[str, Any]]:
@@ -128,33 +164,9 @@ class EmbeddingGenerator:
         return embeddings
 
     def _generate_sentence_transformer_embeddings(self, texts: List[str]) -> List[Dict[str, Any]]:
-        """Generate embeddings using SentenceTransformer."""
-        embeddings = []
-
-        if not SENTENCE_TRANSFORMERS_AVAILABLE:
-            self.logger.warning("SentenceTransformer not available")
-            return []
-        
-        try:
-            if self.sentence_transformer is None:
-                self.logger.info("Loading SentenceTransformer model...")
-                self.sentence_transformer = SentenceTransformer('all-MiniLM-L6-v2')
-
-            # Generate embeddings
-            vectors = self.sentence_transformer.encode(texts)
-
-            for text, vector in zip(texts, vectors):
-                embeddings.append({
-                    'text': text,
-                    'vector': vector.tolist(),
-                    'model': 'all-MiniLM-L6-v2',
-                    'dimensions': len(vector)
-                })
-
-        except Exception as e:
-            self.logger.error(f"SentenceTransformer embedding generation failed: {e}")
-
-        return embeddings
+        """Deprecated: SentenceTransformer removed for Vercel optimization."""
+        self.logger.warning("SentenceTransformer is disabled for Vercel deployment")
+        return []
 
     def _chunk_text(self, text: str, max_length: int) -> List[str]:
         """
