@@ -172,6 +172,59 @@ async def root():
     }
 
 
+@app.get("/debug-system", tags=["system"])
+async def debug_system():
+    """Debug system configuration and connectivity."""
+    import os
+    import sys
+    
+    results = {
+        "python_version": sys.version,
+        "env_vars": {
+            "DATABASE_URL_SET": "DATABASE_URL" in os.environ,
+            "SUPABASE_URL_SET": "SUPABASE_URL" in os.environ,
+            "GEMINI_API_KEY_SET": "GEMINI_API_KEY" in os.environ,
+        },
+        "imports": {},
+        "database": {}
+    }
+    
+    # Check imports
+    try:
+        import psycopg2
+        results["imports"]["psycopg2"] = f"Success: {psycopg2.__version__}"
+    except ImportError as e:
+        results["imports"]["psycopg2"] = f"Failed: {e}"
+        
+    try:
+        import bcrypt
+        results["imports"]["bcrypt"] = "Success"
+    except ImportError as e:
+        results["imports"]["bcrypt"] = f"Failed: {e}"
+        
+    try:
+        from sqlalchemy import create_engine, text
+        results["imports"]["sqlalchemy"] = f"Success: {sqlalchemy.__version__}"
+        
+        # Test DB Connection
+        try:
+            db_url = os.environ.get("DATABASE_URL")
+            if db_url:
+                engine = create_engine(db_url)
+                with engine.connect() as conn:
+                    result = conn.execute(text("SELECT 1"))
+                    results["database"]["connection"] = f"Success: {result.scalar()}"
+            else:
+                results["database"]["connection"] = "Failed: DATABASE_URL not set"
+        except Exception as e:
+            results["database"]["connection"] = f"Failed: {e}"
+            
+    except ImportError as e:
+        results["imports"]["sqlalchemy"] = f"Failed: {e}"
+        
+    return results
+
+
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(documents.router, prefix="/documents", tags=["documents"])
