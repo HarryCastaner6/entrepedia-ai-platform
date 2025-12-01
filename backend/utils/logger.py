@@ -13,7 +13,7 @@ def setup_logger(name: str, log_file: str | None = None, level=logging.INFO) -> 
 
     Args:
         name: Logger name
-        log_file: Optional path to log file
+        log_file: Optional path to log file (ignored in serverless environments)
         level: Logging level
 
     Returns:
@@ -32,29 +32,40 @@ def setup_logger(name: str, log_file: str | None = None, level=logging.INFO) -> 
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-    # Console handler
+    # Console handler (always available)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-    # File handler (optional)
+    # File handler (only in writable environments)
     if log_file:
-        log_path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            log_path = Path(log_file)
+            log_path.parent.mkdir(parents=True, exist_ok=True)
 
-        file_handler = RotatingFileHandler(
-            log_file,
-            maxBytes=10 * 1024 * 1024,  # 10MB
-            backupCount=5
-        )
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+            file_handler = RotatingFileHandler(
+                log_file,
+                maxBytes=10 * 1024 * 1024,  # 10MB
+                backupCount=5
+            )
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+        except (OSError, PermissionError):
+            # Serverless environments are read-only, skip file logging
+            logger.info(f"File logging disabled for {name} (read-only filesystem)")
 
     return logger
 
 
-# Application-wide loggers
-app_logger = setup_logger("entrepedia_app", "logs/app.log")
-scraper_logger = setup_logger("scraper", "logs/scraper.log")
-processor_logger = setup_logger("processor", "logs/processor.log")
-agent_logger = setup_logger("agent", "logs/agent.log")
+# Application-wide loggers (console-only in serverless environments)
+try:
+    app_logger = setup_logger("entrepedia_app", "logs/app.log")
+    scraper_logger = setup_logger("scraper", "logs/scraper.log")
+    processor_logger = setup_logger("processor", "logs/processor.log")
+    agent_logger = setup_logger("agent", "logs/agent.log")
+except Exception:
+    # Fallback to console-only loggers
+    app_logger = setup_logger("entrepedia_app")
+    scraper_logger = setup_logger("scraper")
+    processor_logger = setup_logger("processor")
+    agent_logger = setup_logger("agent")
