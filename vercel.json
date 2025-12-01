@@ -5,10 +5,10 @@
   "framework": "vite",
   "functions": {
     "api/auth.py": {
-      "runtime": "python3.9"
+      "runtime": "@vercel/python"
     },
     "api/health.py": {
-      "runtime": "python3.9"
+      "runtime": "@vercel/python"
     }
   },
   "rewrites": [
