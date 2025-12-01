@@ -1,0 +1,17 @@
+# Core API - minimal for Vercel serverless
+fastapi==0.109.2
+python-multipart==0.0.9
+
+# Configuration
+pydantic==2.6.1
+pydantic-settings==2.2.1
+python-dotenv==1.0.1
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib==1.7.4
+bcrypt==4.0.1
+
+# Database (optional for fallback mode)
+sqlalchemy==2.0.27
+psycopg2-binary==2.9.9
