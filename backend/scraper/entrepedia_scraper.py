@@ -10,7 +10,7 @@ from typing import List, Dict, Any
 from urllib.parse import urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
-from tqdm import tqdm
+# from tqdm import tqdm
 from backend.utils.config import settings
 from backend.utils.logger import scraper_logger
 from backend.scraper.auth_handler import EntrepediaAuth
@@ -170,7 +170,7 @@ class EntrepediaScraper:
         # Step 3: Download all files from all courses
         all_files = []
 
-        for course in tqdm(courses, desc="Processing courses"):
+        for course in courses:
             scraper_logger.info(f"Processing course: {course['title']}")
 
             # Create course directory
@@ -181,7 +181,7 @@ class EntrepediaScraper:
             files = self.discover_course_files(course['url'])
 
             # Download files
-            for file_info in tqdm(files, desc=f"Downloading {course['title']}", leave=False):
+            for file_info in files:
                 try:
                     downloaded_path = self.downloader.download(
                         file_info['url'],

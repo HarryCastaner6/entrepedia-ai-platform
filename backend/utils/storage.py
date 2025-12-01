@@ -1,5 +1,8 @@
 import shutil
-import boto3
+try:
+    import boto3
+except ImportError:
+    boto3 = None
 from pathlib import Path
 from typing import BinaryIO, Optional
 from backend.utils.config import settings
