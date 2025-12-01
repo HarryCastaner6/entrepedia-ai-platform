@@ -1,36 +1,11 @@
 """
-Minimal Vercel serverless function with basic authentication.
+Vercel Python serverless function for authentication.
 """
-from fastapi import FastAPI, HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from datetime import timedelta
+import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import parse_qs, urlparse
 import jwt
-import hashlib
 import datetime
-
-# Pydantic models
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-# Create FastAPI app
-app = FastAPI(title="Entrepedia AI Platform API")
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://entrepedia-ai-platform.vercel.app",
-        "https://*.vercel.app",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Demo credentials
 DEMO_USERS = {
@@ -40,55 +15,128 @@ DEMO_USERS = {
     "test@example.com": "test123"
 }
 
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.datetime.utcnow() + expires_delta
-        to_encode.update({"exp": expire})
+def create_access_token(data: dict):
+    payload = data.copy()
+    expire = datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
+    payload.update({"exp": expire})
 
-    secret_key = "fallback-secret-key-for-demo"
-    return jwt.encode(to_encode, secret_key, algorithm="HS256")
+    secret = "fallback-secret-key-for-demo"
+    return jwt.encode(payload, secret, algorithm="HS256")
 
-@app.get("/")
-async def root():
-    return {
-        "message": "Entrepedia AI Platform API",
-        "version": "1.0.0",
-        "mode": "minimal"
+def handler(request):
+    # Handle CORS
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Content-Type': 'application/json'
     }
 
-@app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "mode": "minimal"
-    }
+    # Handle preflight requests
+    if request.method == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': ''
+        }
 
-@app.post("/auth/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    username = form_data.username
-    password = form_data.password
+    path = request.url.path if hasattr(request.url, 'path') else getattr(request, 'path', '/')
+    method = getattr(request, 'method', 'GET')
 
-    if username in DEMO_USERS and DEMO_USERS[username] == password:
-        access_token = create_access_token(
-            data={"sub": username, "user_id": 1},
-            expires_delta=timedelta(minutes=30)
-        )
-        return Token(access_token=access_token, token_type="bearer")
+    try:
+        # Health endpoint
+        if path == '/health':
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'status': 'healthy',
+                    'mode': 'vercel-python'
+                })
+            }
 
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Incorrect username or password",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+        # Root endpoint
+        if path == '/' or path == '':
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'message': 'Entrepedia AI Platform API',
+                    'version': '1.0.0',
+                    'mode': 'vercel-python'
+                })
+            }
 
-@app.post("/auth/logout")
-async def logout():
-    return {"success": True, "message": "Logged out successfully"}
+        # Login endpoint
+        if path == '/auth/login' and method == 'POST':
+            # Parse form data
+            body = getattr(request, 'body', '')
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
 
-@app.get("/auth/verify-token")
-async def verify_token():
-    return {"success": True, "message": "Token valid", "user": "demo"}
+            form_data = parse_qs(body)
+            username = form_data.get('username', [''])[0]
+            password = form_data.get('password', [''])[0]
 
-# For Vercel
-handler = app
+            if username in DEMO_USERS and DEMO_USERS[username] == password:
+                token = create_access_token({
+                    'sub': username,
+                    'user_id': 1
+                })
+
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'access_token': token,
+                        'token_type': 'bearer'
+                    })
+                }
+            else:
+                return {
+                    'statusCode': 401,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'detail': 'Incorrect username or password'
+                    })
+                }
+
+        # Logout endpoint
+        if path == '/auth/logout':
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': True,
+                    'message': 'Logged out successfully'
+                })
+            }
+
+        # Verify token endpoint
+        if path == '/auth/verify-token':
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': True,
+                    'message': 'Token valid',
+                    'user': 'demo'
+                })
+            }
+
+        # Not found
+        return {
+            'statusCode': 404,
+            'headers': headers,
+            'body': json.dumps({'error': 'Not found'})
+        }
+
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({
+                'error': 'Internal server error',
+                'detail': str(e)
+            })
+        }
