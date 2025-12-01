@@ -261,23 +261,26 @@ async def setup_admin_user(db: Session = Depends(get_db_dependency)) -> Dict[str
     Temporary endpoint to create/reset admin user.
     """
     try:
-        username = "testuser"
-        email = "test@example.com"
-        password = "test123"
+        # Match credentials displayed in frontend/src/components/auth/LoginPage.tsx
+        username = "admin"
+        email = "admin@entrepedia.ai"
+        password = "admin123"
         
-        user = db.query(User).filter(User.username == username).first()
+        # Check by email since that's what's used for login
+        user = db.query(User).filter(User.email == email).first()
         
         if user:
             # Update existing user
             user.hashed_password = hash_password(password)
             user.is_active = True
+            user.username = username # Ensure username matches
             action = "updated"
         else:
             # Create new user
             user = User(
                 username=username,
                 email=email,
-                full_name="Test Admin",
+                full_name="Admin User",
                 hashed_password=hash_password(password),
                 is_active=True
             )
@@ -289,7 +292,7 @@ async def setup_admin_user(db: Session = Depends(get_db_dependency)) -> Dict[str
             "success": True,
             "message": f"Admin user {action} successfully",
             "credentials": {
-                "username": username,
+                "email": email,
                 "password": password
             }
         }
