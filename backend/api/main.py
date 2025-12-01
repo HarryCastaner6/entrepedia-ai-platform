@@ -203,6 +203,7 @@ async def debug_system():
         results["imports"]["bcrypt"] = f"Failed: {e}"
         
     try:
+        import sqlalchemy
         from sqlalchemy import create_engine, text
         results["imports"]["sqlalchemy"] = f"Success: {sqlalchemy.__version__}"
         
