@@ -43,8 +43,8 @@ fi
 # Test 1: Health endpoint
 print_test "Testing health endpoint..."
 HEALTH_RESPONSE=$(curl -s -w "\n%{http_code}" "$DEPLOYMENT_URL/api/health")
-HEALTH_CODE=$(echo "$HEALTH_RESPONSE" | tail -n1)
-HEALTH_BODY=$(echo "$HEALTH_RESPONSE" | head -n -1)
+HEALTH_CODE=$(echo "$HEALTH_RESPONSE" | tail -1)
+HEALTH_BODY=$(echo "$HEALTH_RESPONSE" | sed '$d')
 
 if [ "$HEALTH_CODE" = "200" ]; then
     print_pass "Health endpoint returns 200 OK"
@@ -59,8 +59,8 @@ echo ""
 # Test 2: Auth info endpoint
 print_test "Testing auth info endpoint..."
 AUTH_RESPONSE=$(curl -s -w "\n%{http_code}" "$DEPLOYMENT_URL/api/auth/")
-AUTH_CODE=$(echo "$AUTH_RESPONSE" | tail -n1)
-AUTH_BODY=$(echo "$AUTH_RESPONSE" | head -n -1)
+AUTH_CODE=$(echo "$AUTH_RESPONSE" | tail -1)
+AUTH_BODY=$(echo "$AUTH_RESPONSE" | sed '$d')
 
 if [ "$AUTH_CODE" = "200" ]; then
     print_pass "Auth info endpoint returns 200 OK"
@@ -80,8 +80,8 @@ LOGIN_RESPONSE=$(curl -s -w "\n%{http_code}" \
     -d "username=admin@entrepedia.ai&password=admin123" \
     "$DEPLOYMENT_URL/api/auth/login")
 
-LOGIN_CODE=$(echo "$LOGIN_RESPONSE" | tail -n1)
-LOGIN_BODY=$(echo "$LOGIN_RESPONSE" | head -n -1)
+LOGIN_CODE=$(echo "$LOGIN_RESPONSE" | tail -1)
+LOGIN_BODY=$(echo "$LOGIN_RESPONSE" | sed '$d')
 
 if [ "$LOGIN_CODE" = "200" ]; then
     print_pass "Login with correct credentials successful"
@@ -107,7 +107,7 @@ WRONG_LOGIN_RESPONSE=$(curl -s -w "\n%{http_code}" \
     -d "username=wrong@example.com&password=wrongpass" \
     "$DEPLOYMENT_URL/api/auth/login")
 
-WRONG_CODE=$(echo "$WRONG_LOGIN_RESPONSE" | tail -n1)
+WRONG_CODE=$(echo "$WRONG_LOGIN_RESPONSE" | tail -1)
 
 if [ "$WRONG_CODE" = "401" ]; then
     print_pass "Wrong credentials correctly rejected (401)"
