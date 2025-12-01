@@ -20,11 +20,7 @@ app = FastAPI(title="Entrepedia Authentication API")
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://entrepedia-ai-platform.vercel.app",
-        "https://*.vercel.app",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
