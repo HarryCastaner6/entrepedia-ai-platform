@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     secret_key: str = Field(default="dev-secret-key-32-chars-minimum-change-in-production", min_length=32)
 
     # Database
-    database_url: str = "sqlite:///./data/entrepedia.db"
+    database_url: str = Field(default="sqlite:///./data/entrepedia.db", description="Database URL - set DATABASE_URL env var for production")
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     gemini_api_key: str = "AIzaSyB7_gjyyVbSZPLzcrC5vQg0ZGxcLOGpMM8"
 
     # Vector Database
-    vector_db_type: Literal["faiss", "pinecone", "weaviate", "supabase"] = "faiss"
+    vector_db_type: Literal["faiss", "pinecone", "weaviate", "supabase"] = "supabase"
     pinecone_api_key: str | None = None
     pinecone_environment: str | None = None
     weaviate_url: str = "http://localhost:8080"

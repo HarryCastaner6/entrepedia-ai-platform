@@ -41,3 +41,4 @@ credentials/
 *.log
 *.tmp
 .cache/
+.vercel

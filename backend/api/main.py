@@ -28,7 +28,12 @@ async def lifespan(app: FastAPI):
         app_logger.info("Database initialized successfully")
     except Exception as e:
         app_logger.error(f"Failed to initialize database: {e}")
-        raise
+        # On serverless platforms like Vercel, database init might fail
+        # Allow the app to start anyway so endpoints can still function
+        if settings.app_env == "production":
+            app_logger.warning("Continuing without database initialization for serverless deployment")
+        else:
+            raise
 
     yield
     app_logger.info("Shutting down Entrepedia AI Platform API")
@@ -74,6 +79,8 @@ app.add_middleware(
         "http://localhost:3001",  # Vite dev server alternate port
         "http://localhost:5173",  # Vite default port
         "http://localhost:5174",  # Vite alternate port
+        "https://entrepedia-ai-platform.vercel.app",  # Vercel deployment
+        "https://*.vercel.app",  # All Vercel preview deployments
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -104,12 +111,16 @@ async def log_requests(request, call_next):
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """Handle all unhandled exceptions."""
+    from fastapi.responses import JSONResponse
     app_logger.error(f"Unhandled exception: {exc}", exc_info=True)
-    return {
-        "success": False,
-        "error": "Internal server error",
-        "detail": str(exc) if settings.debug else "An unexpected error occurred"
-    }
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error": "Internal server error",
+            "detail": str(exc) if settings.debug else "An unexpected error occurred"
+        }
+    )
 
 
 # Authentication dependency

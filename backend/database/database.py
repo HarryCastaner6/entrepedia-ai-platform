@@ -22,11 +22,17 @@ if settings.database_url.startswith("sqlite"):
     )
 else:
     # PostgreSQL or other databases
+    # For serverless environments like Vercel, use smaller pool sizes
+    pool_size = 1 if settings.app_env == "production" else 10
+    max_overflow = 2 if settings.app_env == "production" else 20
+
     engine = create_engine(
         settings.database_url,
         pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20,
+        pool_size=pool_size,
+        max_overflow=max_overflow,
+        pool_timeout=30,
+        pool_recycle=3600,  # Recycle connections every hour
     )
 
 # Create session factory
@@ -83,8 +89,26 @@ def get_db_context():
 # Dependency for FastAPI
 def get_db_dependency():
     """FastAPI dependency for database session."""
-    db = SessionLocal()
     try:
-        yield db
-    finally:
-        db.close()
+        db = SessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+    except Exception as e:
+        # Return a mock session that will raise exceptions on use
+        # This allows the endpoint to handle the database failure gracefully
+        from backend.utils.logger import app_logger
+        app_logger.error(f"Database session creation failed: {e}")
+
+        class MockSession:
+            def query(self, *args, **kwargs):
+                raise Exception(f"Database connection failed: {e}")
+            def add(self, *args, **kwargs):
+                raise Exception(f"Database connection failed: {e}")
+            def commit(self, *args, **kwargs):
+                raise Exception(f"Database connection failed: {e}")
+            def rollback(self, *args, **kwargs):
+                pass
+
+        yield MockSession()

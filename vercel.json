@@ -3,6 +3,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
+  "functions": {
+    "api/*.py": {
+      "runtime": "python3.9"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -20,7 +25,10 @@
     "STORAGE_TYPE": "supabase",
     "VECTOR_DB_TYPE": "supabase",
     "APP_ENV": "production",
-    "DEBUG": "False",
+    "DEBUG": "false",
+    "SECRET_KEY": "production-secret-key-32-chars-minimum-for-jwt-security",
+    "JWT_SECRET_KEY": "production-jwt-secret-32-chars-minimum-for-security",
+    "ACCESS_TOKEN_EXPIRE_MINUTES": "30",
     "GEMINI_API_KEY": "AIzaSyB7_gjyyVbSZPLzcrC5vQg0ZGxcLOGpMM8"
   }
 }
