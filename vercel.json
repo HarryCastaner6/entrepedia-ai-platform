@@ -3,26 +3,18 @@
   "buildCommand": "npm run build",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
-  "functions": {
-    "api/auth.py": {
-      "runtime": "@vercel/python"
-    },
-    "api/health.py": {
-      "runtime": "@vercel/python"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/auth",
-      "destination": "/api/auth.py"
+      "destination": "/api/auth.js"
     },
     {
       "source": "/api/auth/(.*)",
-      "destination": "/api/auth.py"
+      "destination": "/api/auth.js"
     },
     {
       "source": "/api/health",
-      "destination": "/api/health.py"
+      "destination": "/api/health.js"
     },
     {
       "source": "/(.*)",
