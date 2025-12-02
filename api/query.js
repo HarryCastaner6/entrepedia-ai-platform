@@ -16,7 +16,7 @@ function getRawBody(req) {
 
 // Function to call Gemini API
 async function callGeminiAPI(query, agentType = 'coach') {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_MODEL;
+  const apiKey = 'AIzaSyB7_gjyyVbSZPLzcrC5vQg0ZGxcLOGpMM8';
 
   if (!apiKey) {
     throw new Error('Gemini API key not configured. Please set GEMINI_API_KEY environment variable.');
