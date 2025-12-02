@@ -85,7 +85,7 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
         // Trigger parent component refresh if callback provided
         onUploadSuccess?.()
       } else {
-        throw new Error(result.error || 'Upload failed')
+        throw new Error(result.detail || result.error || result.message || 'Upload failed')
       }
     } catch (error) {
       console.error('Upload error:', error)
@@ -254,7 +254,7 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
                         <div>
                           <span className="font-medium text-gray-700">File Type:</span>
                           <span className="ml-2 text-gray-600">
-                            {uploadedFile.result.file_type.toUpperCase()}
+                            {uploadedFile.result.file_type?.toUpperCase() || 'Unknown'}
                           </span>
                         </div>
                         <div>

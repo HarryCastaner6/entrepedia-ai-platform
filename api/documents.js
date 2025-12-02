@@ -65,22 +65,57 @@ module.exports = async (req, res) => {
   // POST /api/documents/upload - Upload document
   if (method === 'POST' && (url === '/api/documents/upload' || url.endsWith('/upload'))) {
     try {
+      console.log('Upload request received:', method, url);
+
       // In a real implementation, this would:
-      // 1. Parse the uploaded file
+      // 1. Parse the uploaded file using formidable or similar
       // 2. Store it in cloud storage
       // 3. Process it for embeddings
       // 4. Save metadata to database
 
-      // For demo purposes, return success
+      // For demo purposes, simulate successful upload with expected response structure
+      const filename = `uploaded-document-${Date.now()}.pdf`;
+      const fileType = 'pdf';
+      const sampleText = 'This is a sample document that has been successfully uploaded and processed. In a real implementation, this would contain the actual extracted text content from your document.';
+
+      // Add to mock documents list
+      const newDocument = {
+        filename: filename,
+        size: 1024000 + Math.random() * 2000000, // Random size between 1-3MB
+        modified: Date.now() / 1000,
+        source: "upload"
+      };
+
+      mockDocuments.upload_files.unshift(newDocument);
+      mockDocuments.total_files = mockDocuments.upload_files.length + mockDocuments.scraped_files.length;
+
+      // Update stats
+      mockStats.total_files = mockDocuments.total_files;
+      mockStats.total_size_bytes += newDocument.size;
+      mockStats.total_size_mb = Math.round((mockStats.total_size_bytes / (1024 * 1024)) * 100) / 100;
+      mockStats.file_types[fileType] = (mockStats.file_types[fileType] || 0) + 1;
+
+      // Return response structure expected by frontend
       res.status(200).json({
         success: true,
-        message: "File uploaded successfully",
-        filename: "demo-file.pdf",
-        size: 1024000,
-        processed: true
+        message: "File uploaded and processed successfully",
+        filename: filename,
+        file_type: fileType,
+        size: newDocument.size,
+        processed: true,
+        processing_result: {
+          text: sampleText,
+          chunks_created: 5,
+          embeddings_generated: true
+        },
+        metadata: {
+          upload_time: new Date().toISOString(),
+          processing_time: "2.3s"
+        }
       });
       return;
     } catch (error) {
+      console.error('Upload error:', error);
       res.status(500).json({
         success: false,
         detail: "Upload failed: " + error.message
