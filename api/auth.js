@@ -1,6 +1,20 @@
 // Node.js Vercel function for authentication
 const jwt = require('jsonwebtoken');
 
+// Helper function to parse request body
+function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      resolve(body);
+    });
+    req.on('error', reject);
+  });
+}
+
 // Demo credentials
 const DEMO_USERS = {
   "admin@entrepedia.ai": "admin123",
@@ -51,11 +65,39 @@ module.exports = async (req, res) => {
 
   if (method === 'POST' && url.includes('/login')) {
     try {
-      const body = req.body;
+      // Parse request body
+      let body;
+      if (req.body) {
+        body = req.body;
+      } else {
+        const rawBody = await getRawBody(req);
+        try {
+          body = JSON.parse(rawBody);
+        } catch (parseError) {
+          console.log('JSON parse error:', parseError.message, 'Raw body:', rawBody);
+          res.status(400).json({
+            detail: "Invalid JSON in request body"
+          });
+          return;
+        }
+      }
+
+      // Debug logging
+      console.log('Parsed body:', body);
+
       const username = body.username;
       const password = body.password;
 
-      if (username && password && DEMO_USERS[username] === password) {
+      console.log('Username:', username, 'Password provided:', !!password);
+
+      if (!username || !password) {
+        res.status(400).json({
+          detail: "Username and password are required"
+        });
+        return;
+      }
+
+      if (DEMO_USERS[username] === password) {
         const token = createAccessToken({
           sub: username,
           user_id: 1
