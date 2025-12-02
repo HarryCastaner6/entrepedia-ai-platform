@@ -73,7 +73,7 @@ interface AllSettings {
 }
 
 class SettingsAPI {
-  private baseUrl = 'http://localhost:8000/settings'
+  private baseUrl = '/api/settings'
 
   private getToken(): string | null {
     return localStorage.getItem('auth_token')

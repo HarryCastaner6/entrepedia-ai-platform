@@ -21,6 +21,10 @@
       "destination": "/api/documents.js"
     },
     {
+      "source": "/api/settings/(.*)",
+      "destination": "/api/settings.js"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
