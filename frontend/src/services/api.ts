@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -173,7 +173,7 @@ export const authApi = {
     formData.append('username', username)
     formData.append('password', password)
 
-    const response = await api.post('/auth/login', formData, {
+    const response = await api.post('/auth', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -192,12 +192,14 @@ export const authApi = {
   },
 
   logout: async () => {
-    const response = await api.post('/auth/logout')
+    const response = await api.post('/auth', {}, {
+      params: { action: 'logout' }
+    })
     return response.data
   },
 
   getProfile: async () => {
-    const response = await api.get('/auth/me')
+    const response = await api.get('/auth')
     return response.data
   },
 

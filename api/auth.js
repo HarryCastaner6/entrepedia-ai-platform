@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
     return;
   }
 
-  if (method === 'POST' && url.includes('/login')) {
+  if (method === 'POST' && (url.includes('/login') || url === '/api/auth')) {
     try {
       // Parse request body based on content type
       const contentType = req.headers['content-type'] || '';
@@ -142,7 +142,7 @@ module.exports = async (req, res) => {
     return;
   }
 
-  if (method === 'POST' && url.includes('/logout')) {
+  if (method === 'POST' && (url.includes('/logout') || (url === '/api/auth' && req.query?.action === 'logout'))) {
     res.status(200).json({
       success: true,
       message: "Logged out successfully"
