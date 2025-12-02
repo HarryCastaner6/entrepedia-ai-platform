@@ -47,19 +47,48 @@ export function DocumentsList({ refreshTrigger }: DocumentsListProps) {
     try {
       setLoading(true)
       setError(null)
+
+      // Get uploaded documents from localStorage
+      const storedDocuments = localStorage.getItem('uploaded_documents')
+      const uploadedDocs = storedDocuments ? JSON.parse(storedDocuments) : []
+
       const response = await fetch('/api/documents/processed')
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          setDocuments(data)
+          // Merge API data with localStorage data
+          const mergedData = {
+            ...data,
+            upload_files: [...uploadedDocs, ...data.upload_files],
+            total_files: uploadedDocs.length + data.upload_files.length + data.scraped_files.length
+          }
+          setDocuments(mergedData)
         } else {
-          throw new Error('Failed to fetch documents')
+          // If API fails, show at least localStorage data
+          setDocuments({
+            upload_files: uploadedDocs,
+            scraped_files: [],
+            total_files: uploadedDocs.length
+          })
         }
       } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        // If API fails, show at least localStorage data
+        setDocuments({
+          upload_files: uploadedDocs,
+          scraped_files: [],
+          total_files: uploadedDocs.length
+        })
       }
     } catch (error) {
       console.error('Failed to fetch documents:', error)
+      // On error, try to show localStorage data
+      const storedDocuments = localStorage.getItem('uploaded_documents')
+      const uploadedDocs = storedDocuments ? JSON.parse(storedDocuments) : []
+      setDocuments({
+        upload_files: uploadedDocs,
+        scraped_files: [],
+        total_files: uploadedDocs.length
+      })
       setError(error instanceof Error ? error.message : 'Unknown error occurred')
     } finally {
       setLoading(false)
@@ -72,17 +101,30 @@ export function DocumentsList({ refreshTrigger }: DocumentsListProps) {
     }
 
     try {
-      const response = await fetch(`/api/documents/delete/${encodeURIComponent(filename)}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        // Refresh the list after successful deletion
-        fetchDocuments()
-      } else {
-        const data = await response.json()
-        alert(`Failed to delete document: ${data.detail || 'Unknown error'}`)
+      // First try to delete from localStorage
+      const storedDocuments = localStorage.getItem('uploaded_documents')
+      if (storedDocuments) {
+        const uploadedDocs = JSON.parse(storedDocuments)
+        const filteredDocs = uploadedDocs.filter((doc: DocumentFile) => doc.filename !== filename)
+        localStorage.setItem('uploaded_documents', JSON.stringify(filteredDocs))
       }
+
+      // Then try to delete from API (this may fail for demo docs, that's ok)
+      try {
+        const response = await fetch(`/api/documents/delete/${encodeURIComponent(filename)}`, {
+          method: 'DELETE'
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          console.log('API deletion failed (expected for uploaded docs):', data.detail)
+        }
+      } catch (apiError) {
+        console.log('API deletion failed (expected for uploaded docs):', apiError)
+      }
+
+      // Refresh the list after deletion
+      fetchDocuments()
     } catch (error) {
       console.error('Delete error:', error)
       alert(`Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`)

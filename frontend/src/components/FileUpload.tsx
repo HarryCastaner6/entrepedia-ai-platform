@@ -82,6 +82,20 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
               : f
           )
         )
+
+        // Save to localStorage for persistence
+        const documentToSave = {
+          filename: result.filename,
+          size: result.size || uploadedFile.file.size,
+          modified: Date.now() / 1000,
+          source: 'upload' as const
+        }
+
+        const existingDocs = localStorage.getItem('uploaded_documents')
+        const uploadedDocs = existingDocs ? JSON.parse(existingDocs) : []
+        uploadedDocs.unshift(documentToSave)
+        localStorage.setItem('uploaded_documents', JSON.stringify(uploadedDocs))
+
         // Trigger parent component refresh if callback provided
         onUploadSuccess?.()
       } else {
