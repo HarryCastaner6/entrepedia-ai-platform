@@ -67,29 +67,30 @@ module.exports = async (req, res) => {
     try {
       // Parse request body based on content type
       const contentType = req.headers['content-type'] || '';
+      console.log('All headers:', JSON.stringify(req.headers, null, 2));
+      console.log('Content-Type:', contentType);
+      console.log('URL:', url);
+      console.log('Method:', method);
+
       let username, password;
 
       if (req.body) {
-        // Body already parsed by Vercel
-        if (contentType.includes('application/json')) {
-          username = req.body.username;
-          password = req.body.password;
-        } else {
-          // Form data
-          username = req.body.username;
-          password = req.body.password;
-        }
+        // Body already parsed by Vercel - try to get username/password directly
+        username = req.body.username;
+        password = req.body.password;
+        console.log('Using pre-parsed body');
       } else {
         // Manually parse the body
         const rawBody = await getRawBody(req);
         console.log('Raw body:', rawBody);
-        console.log('Content-Type:', contentType);
 
-        if (contentType.includes('application/json')) {
+        // Try JSON first
+        if (contentType.includes('application/json') || rawBody.trim().startsWith('{')) {
           try {
             const body = JSON.parse(rawBody);
             username = body.username;
             password = body.password;
+            console.log('Parsed as JSON');
           } catch (parseError) {
             console.log('JSON parse error:', parseError.message);
             res.status(400).json({
@@ -97,16 +98,24 @@ module.exports = async (req, res) => {
             });
             return;
           }
-        } else if (contentType.includes('application/x-www-form-urlencoded')) {
+        } else if (contentType.includes('application/x-www-form-urlencoded') || rawBody.includes('username=')) {
           // Parse form data
           const params = new URLSearchParams(rawBody);
           username = params.get('username');
           password = params.get('password');
+          console.log('Parsed as form data');
         } else {
-          res.status(400).json({
-            detail: "Unsupported content type. Use application/json or application/x-www-form-urlencoded"
-          });
-          return;
+          console.log('Unknown content type, trying as JSON fallback');
+          try {
+            const body = JSON.parse(rawBody);
+            username = body.username;
+            password = body.password;
+          } catch {
+            res.status(400).json({
+              detail: "Unable to parse request. Please send JSON with username and password fields."
+            });
+            return;
+          }
         }
       }
 

@@ -169,14 +169,9 @@ export const documentsApi = {
 // Auth API
 export const authApi = {
   login: async (username: string, password: string) => {
-    const formData = new FormData()
-    formData.append('username', username)
-    formData.append('password', password)
-
-    const response = await api.post('/auth', formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+    const response = await api.post('/auth', {
+      username,
+      password
     })
     return response.data
   },
