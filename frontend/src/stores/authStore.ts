@@ -33,7 +33,7 @@ export const useAuthStore = create<AuthState>()(
 
       // Actions
       login: (token: string, user: User) => {
-        localStorage.setItem('auth_token', token);
+        localStorage.setItem('access_token', token);
         set({
           user,
           token,
@@ -43,7 +43,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        localStorage.removeItem('auth_token');
+        localStorage.removeItem('access_token');
         set({
           user: null,
           token: null,
@@ -83,11 +83,11 @@ export const useAuthStore = create<AuthState>()(
 
 // Utility function to check if user is authenticated
 export const isUserAuthenticated = () => {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('access_token');
   return !!token;
 };
 
 // Utility function to get auth token
 export const getAuthToken = () => {
-  return localStorage.getItem('auth_token');
+  return localStorage.getItem('access_token');
 };

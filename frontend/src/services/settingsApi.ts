@@ -76,26 +76,29 @@ class SettingsAPI {
   private baseUrl = '/api/settings'
 
   private getToken(): string | null {
-    return localStorage.getItem('auth_token')
+    return localStorage.getItem('access_token')
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
-    const token = this.getToken()
     const headers = {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     }
+
+    console.log('Settings API request:', url, options.method || 'GET')
 
     const response = await fetch(url, {
       ...options,
       headers,
     })
 
+    console.log('Settings API response:', response.status, response.statusText)
+
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Request failed' }))
-      throw new Error(error.detail || `HTTP ${response.status}`)
+      const errorText = await response.text()
+      console.error('Settings API error:', response.status, errorText)
+      throw new Error(errorText || `HTTP ${response.status}`)
     }
 
     return response.json()
