@@ -65,28 +65,50 @@ module.exports = async (req, res) => {
 
   if (method === 'POST' && url.includes('/login')) {
     try {
-      // Parse request body
-      let body;
+      // Parse request body based on content type
+      const contentType = req.headers['content-type'] || '';
+      let username, password;
+
       if (req.body) {
-        body = req.body;
+        // Body already parsed by Vercel
+        if (contentType.includes('application/json')) {
+          username = req.body.username;
+          password = req.body.password;
+        } else {
+          // Form data
+          username = req.body.username;
+          password = req.body.password;
+        }
       } else {
+        // Manually parse the body
         const rawBody = await getRawBody(req);
-        try {
-          body = JSON.parse(rawBody);
-        } catch (parseError) {
-          console.log('JSON parse error:', parseError.message, 'Raw body:', rawBody);
+        console.log('Raw body:', rawBody);
+        console.log('Content-Type:', contentType);
+
+        if (contentType.includes('application/json')) {
+          try {
+            const body = JSON.parse(rawBody);
+            username = body.username;
+            password = body.password;
+          } catch (parseError) {
+            console.log('JSON parse error:', parseError.message);
+            res.status(400).json({
+              detail: "Invalid JSON in request body"
+            });
+            return;
+          }
+        } else if (contentType.includes('application/x-www-form-urlencoded')) {
+          // Parse form data
+          const params = new URLSearchParams(rawBody);
+          username = params.get('username');
+          password = params.get('password');
+        } else {
           res.status(400).json({
-            detail: "Invalid JSON in request body"
+            detail: "Unsupported content type. Use application/json or application/x-www-form-urlencoded"
           });
           return;
         }
       }
-
-      // Debug logging
-      console.log('Parsed body:', body);
-
-      const username = body.username;
-      const password = body.password;
 
       console.log('Username:', username, 'Password provided:', !!password);
 
